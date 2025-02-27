@@ -12,7 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 DATABASE = {
     'default': {
         'ENGINE': 'sqlite',
-        'NAME': os.path.join(BASE_DIR, 'data', 'animeproductivity.db'),
+        'NAME': str(BASE_DIR / 'data' / 'animeproductivity.db'),
     }
 }
 
@@ -47,8 +47,8 @@ AUTH = {
 
 # Configurações da API do Google Calendar
 GOOGLE_CALENDAR = {
-    'credentials_file': os.path.join(BASE_DIR, 'config', 'credentials.json'),
-    'token_file': os.path.join(BASE_DIR, 'config', 'token.json'),
+    'credentials_file': str(BASE_DIR / 'config' / 'credentials.json'),
+    'token_file': str(BASE_DIR / 'config' / 'token.json'),
     'scopes': ['https://www.googleapis.com/auth/calendar.readonly',
                'https://www.googleapis.com/auth/calendar.events']
 }

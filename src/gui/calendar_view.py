@@ -4,12 +4,14 @@ from PySide6.QtCore import Qt, QDate
 from src.database.models import Task
 from src.database.database import get_session
 from datetime import datetime
+from src.services.task_manager import TaskManager
 
 class CalendarWindow(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
         self.user_id = parent.user_id
         self.session = get_session()
+        self.task_manager = TaskManager(self.user_id)
         self.setup_ui()
         self.load_tasks()
         
@@ -121,5 +123,6 @@ class CalendarWindow(QDialog):
             self.show_tasks_for_date(self.calendar.selectedDate())
             
     def __del__(self):
-        """Fecha a sessão do banco de dados."""
-        self.session.close() 
+        """Fecha as sessões do banco de dados."""
+        self.session.close()
+        self.task_manager.session.close() 

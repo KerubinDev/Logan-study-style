@@ -3,13 +3,17 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from src.database.models import AppConfig, PomodoroConfig
 from src.gui.themes import Theme
+from src.database.database import get_session
 
 class SettingsWindow(QDialog):
     def __init__(self, parent):
         super().__init__()
+        self.parent = parent  # Guardar referência à janela principal
         self.user_id = parent.user_id
         self.theme = Theme()
+        self.session = get_session()
         self.setup_ui()
+        self.load_settings()
         
     def setup_ui(self):
         """Configura a interface de configurações."""
@@ -92,62 +96,58 @@ class SettingsWindow(QDialog):
         buttons_layout.addWidget(cancel_btn)
         layout.addLayout(buttons_layout)
         
-        # Carregar configurações atuais
-        self.load_settings()
-        
     def load_settings(self):
         """Carrega as configurações do usuário."""
-        from src.database.database import get_session
-        session = get_session()
-        
         # App Config
-        app_config = session.query(AppConfig).filter_by(user_id=self.user_id).first()
+        app_config = self.session.query(AppConfig).filter_by(user_id=self.user_id).first()
         if app_config:
             self.theme_combo.setCurrentText(app_config.theme)
             self.notifications_check.setChecked(app_config.notifications_enabled)
             self.calendar_sync_check.setChecked(app_config.calendar_sync_enabled)
             
         # Pomodoro Config
-        pomodoro_config = session.query(PomodoroConfig).filter_by(user_id=self.user_id).first()
+        pomodoro_config = self.session.query(PomodoroConfig).filter_by(user_id=self.user_id).first()
         if pomodoro_config:
             self.work_time_spin.setValue(pomodoro_config.work_time)
             self.break_time_spin.setValue(pomodoro_config.break_time)
             self.long_break_spin.setValue(pomodoro_config.long_break_time)
             self.block_distractions_check.setChecked(pomodoro_config.block_distractions)
             
-        session.close()
-        
     def save_settings(self):
         """Salva as configurações do usuário."""
-        from src.database.database import get_session
-        session = get_session()
-        
-        # App Config
-        app_config = session.query(AppConfig).filter_by(user_id=self.user_id).first()
-        if not app_config:
-            app_config = AppConfig(user_id=self.user_id)
-            session.add(app_config)
+        try:
+            # App Config
+            app_config = self.session.query(AppConfig).filter_by(user_id=self.user_id).first()
+            if not app_config:
+                app_config = AppConfig(user_id=self.user_id)
+                self.session.add(app_config)
+                
+            app_config.theme = self.theme_combo.currentText()
+            app_config.notifications_enabled = self.notifications_check.isChecked()
+            app_config.calendar_sync_enabled = self.calendar_sync_check.isChecked()
             
-        app_config.theme = self.theme_combo.currentText()
-        app_config.notifications_enabled = self.notifications_check.isChecked()
-        app_config.calendar_sync_enabled = self.calendar_sync_check.isChecked()
-        
-        # Pomodoro Config
-        pomodoro_config = session.query(PomodoroConfig).filter_by(user_id=self.user_id).first()
-        if not pomodoro_config:
-            pomodoro_config = PomodoroConfig(user_id=self.user_id)
-            session.add(pomodoro_config)
+            # Pomodoro Config
+            work_time = self.work_time_spin.value()
+            break_time = self.break_time_spin.value()
+            long_break_time = self.long_break_spin.value()
             
-        pomodoro_config.work_time = self.work_time_spin.value()
-        pomodoro_config.break_time = self.break_time_spin.value()
-        pomodoro_config.long_break_time = self.long_break_spin.value()
-        pomodoro_config.block_distractions = self.block_distractions_check.isChecked()
-        
-        session.commit()
-        session.close()
-        
-        QMessageBox.information(self, "Sucesso", "Configurações salvas com sucesso!")
-        self.accept()
+            # Atualizar configurações do timer
+            self.parent.pomodoro_timer.update_config(
+                work_time=work_time,
+                break_time=break_time,
+                long_break_time=long_break_time
+            )
+            
+            self.session.commit()
+            
+            # Atualizar interface do timer
+            self.parent.update_timer_display()
+            
+            QMessageBox.information(self, "Sucesso", "Configurações salvas com sucesso!")
+            self.accept()
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Erro", f"Erro ao salvar configurações: {str(e)}")
         
     def apply_settings(self):
         """Aplica as configurações selecionadas."""

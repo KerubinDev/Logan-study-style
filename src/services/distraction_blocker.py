@@ -2,22 +2,25 @@ import winreg
 import ctypes
 import os
 import sys
-from typing import List, Dict
+from typing import Dict as TypeDict, List as TypeList
 import json
 from src.config.settings import DISTRACTION_DEFAULTS
 from PySide6.QtWidgets import QMessageBox
+from src.database.database import get_data_dir
 
 class DistractionBlocker:
     def __init__(self):
         self.hosts_path = r"C:\Windows\System32\drivers\etc\hosts"
         self.is_active = False
+        self.data_dir = get_data_dir()
         self.blocked_sites = self._load_sites()
         
-    def _load_sites(self) -> Dict[str, List[str]]:
+    def _load_sites(self) -> TypeDict[str, TypeList[str]]:
         """Carrega os sites bloqueados do arquivo ou usa os padrões."""
-        if os.path.exists('blocked_sites.json'):
+        sites_file = os.path.join(self.data_dir, 'blocked_sites.json')
+        if os.path.exists(sites_file):
             try:
-                with open('blocked_sites.json', 'r') as f:
+                with open(sites_file, 'r') as f:
                     return json.load(f)
             except:
                 pass
@@ -25,10 +28,11 @@ class DistractionBlocker:
         
     def _save_sites(self):
         """Salva os sites bloqueados em arquivo."""
-        with open('blocked_sites.json', 'w') as f:
+        sites_file = os.path.join(self.data_dir, 'blocked_sites.json')
+        with open(sites_file, 'w') as f:
             json.dump(self.blocked_sites, f, indent=4)
             
-    def get_sites(self) -> Dict[str, List[str]]:
+    def get_sites(self) -> TypeDict[str, TypeList[str]]:
         """Retorna o dicionário de sites bloqueados."""
         return self.blocked_sites
         

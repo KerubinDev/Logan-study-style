@@ -3,6 +3,8 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from src.services.auth_manager import AuthManager
 from src.gui.themes import Theme
+import os
+from src.database.database import get_data_dir
 
 class LoginWindow(QMainWindow):
     def __init__(self):
@@ -87,18 +89,43 @@ class LoginWindow(QMainWindow):
             
     def handle_login(self):
         """Processa a tentativa de login."""
-        username = self.username_input.text()
-        password = self.password_input.text()
-        
-        user = self.auth_manager.login(username, password)
-        if user:
-            self.show_main_window(user.id)
-        else:
-            QMessageBox.warning(
+        try:
+            username = self.username_input.text()
+            password = self.password_input.text()
+            
+            if not username or not password:
+                QMessageBox.warning(
+                    self,
+                    "Erro",
+                    "Por favor, preencha todos os campos!"
+                )
+                return
+            
+            user = self.auth_manager.login(username, password)
+            if user:
+                self.show_main_window(user.id)
+            else:
+                QMessageBox.warning(
+                    self,
+                    "Erro",
+                    "Usuário ou senha inválidos!"
+                )
+                
+            # Log de debug
+            log_file = os.path.join(get_data_dir(), 'login.log')
+            with open(log_file, 'a') as f:
+                f.write(f"\nTentativa de login - usuário: {username}, sucesso: {user is not None}")
+                
+        except Exception as e:
+            QMessageBox.critical(
                 self,
                 "Erro",
-                "Usuário ou senha inválidos!"
+                f"Erro ao fazer login: {str(e)}"
             )
+            # Log de erro
+            log_file = os.path.join(get_data_dir(), 'error.log')
+            with open(log_file, 'a') as f:
+                f.write(f"\nErro no login: {str(e)}")
             
     def show_main_window(self, user_id):
         """Mostra a janela principal."""

@@ -7,9 +7,41 @@ from plyer import notification
 class PomodoroTimer:
     def __init__(self, user_id):
         self.user_id = user_id
-        self.time_remaining = 25 * 60  # 25 minutos em segundos
+        self.session = get_session()
+        self.config = self._load_config()
+        self.time_remaining = self.config.work_time * 60  # Converter minutos para segundos
+        self.total_time = self.config.work_time * 60
         self.is_running = False
-        self.total_time = 25 * 60
+        
+    def _load_config(self):
+        """Carrega ou cria configuração do Pomodoro."""
+        config = self.session.query(PomodoroConfig).filter_by(user_id=self.user_id).first()
+        if not config:
+            config = PomodoroConfig(
+                user_id=self.user_id,
+                work_time=25,
+                break_time=5,
+                long_break_time=15
+            )
+            self.session.add(config)
+            self.session.commit()
+        return config
+        
+    def update_config(self, work_time=None, break_time=None, long_break_time=None):
+        """Atualiza as configurações do timer."""
+        if work_time is not None:
+            self.config.work_time = work_time
+            self.total_time = work_time * 60
+            if not self.is_running:
+                self.time_remaining = self.total_time
+                
+        if break_time is not None:
+            self.config.break_time = break_time
+            
+        if long_break_time is not None:
+            self.config.long_break_time = long_break_time
+            
+        self.session.commit()
         
     def start(self):
         """Inicia o timer."""

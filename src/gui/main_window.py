@@ -121,13 +121,7 @@ class MainWindow(QMainWindow):
         self.pomodoro_frame.setObjectName("pomodoroFrame")
         pomodoro_layout = QVBoxLayout(self.pomodoro_frame)
         
-        # Timer circular
-        self.timer_canvas = QLabel()
-        self.timer_canvas.setObjectName("timerCanvas")
-        self.timer_canvas.setPixmap(QPixmap("path_to_timer_image.png"))
-        pomodoro_layout.addWidget(self.timer_canvas)
-        
-        # Timer display
+        # Timer display (sem imagem)
         self.timer_label = QLabel("25:00")
         self.timer_label.setObjectName("timerLabel")
         self.timer_label.setStyleSheet("font-size: 48pt; font-weight: bold;")
@@ -139,24 +133,26 @@ class MainWindow(QMainWindow):
         controls_layout.setContentsMargins(0, 0, 0, 0)
         controls_layout.setSpacing(5)
         
-        self.start_button = QPushButton("Iniciar")
+        self.start_button = QPushButton("▶️ Iniciar")
         self.start_button.setObjectName("startButton")
         self.start_button.clicked.connect(self.start_pomodoro)
         controls_layout.addWidget(self.start_button)
         
-        self.pause_button = QPushButton("Pausar")
+        self.pause_button = QPushButton("⏸️ Pausar")
         self.pause_button.setObjectName("pauseButton")
         self.pause_button.clicked.connect(self.pause_pomodoro)
         controls_layout.addWidget(self.pause_button)
         
-        self.reset_button = QPushButton("Resetar")
+        self.reset_button = QPushButton("🔄 Resetar")
         self.reset_button.setObjectName("resetButton")
         self.reset_button.clicked.connect(self.reset_pomodoro)
         controls_layout.addWidget(self.reset_button)
         
         pomodoro_layout.addWidget(controls_frame)
-        
         layout.addWidget(self.pomodoro_frame)
+        
+        # Atualizar display inicial
+        self.update_timer_display()
         
     def create_tasks_widget(self, layout):
         """Cria o widget de tarefas."""
@@ -473,6 +469,12 @@ class MainWindow(QMainWindow):
             # Mostrar nova janela de login
             login = LoginWindow()
             login.show()
+
+    def update_timer_display(self):
+        """Atualiza o display do timer com o tempo atual."""
+        minutes = self.pomodoro_timer.time_remaining // 60
+        seconds = self.pomodoro_timer.time_remaining % 60
+        self.timer_label.setText(f"{minutes:02d}:{seconds:02d}")
 
 class AddTaskDialog(QDialog):
     def __init__(self, parent):

@@ -8,6 +8,7 @@ import pickle
 from src.database.models import Task
 from src.database.database import get_session
 from src.config.settings import GOOGLE_API
+from typing import Dict, List
 
 class GoogleCalendarService:
     def __init__(self, user_id):

@@ -1,15 +1,12 @@
 import PyInstaller.__main__
+import sys
 import os
-import shutil
 
 def build_exe():
     """Gera o executável do programa."""
-    # Limpar diretório dist se existir
-    if os.path.exists("dist"):
-        shutil.rmtree("dist")
-    
-    # Configurar ícone
-    icon_path = os.path.join("assets", "icons", "app.ico")
+    # Configurar o caminho do projeto
+    project_path = os.path.dirname(os.path.abspath(__file__))
+    src_path = os.path.join(project_path, 'src')
     
     # Definir argumentos do PyInstaller
     args = [
@@ -17,21 +14,22 @@ def build_exe():
         '--name=AnimeProductivity',       # Nome do executável
         '--onefile',                      # Gerar um único arquivo
         '--noconsole',                    # Sem console
-        '--add-data=assets;assets',       # Incluir pasta assets
-        f'--icon={icon_path}',           # Ícone do executável
         '--clean',                        # Limpar cache
-        # Adicionar imports ocultos
-        '--hidden-import=PIL._tkinter_finder',
+        f'--paths={src_path}',           # Adicionar src ao path
+        '--add-data=src/config;config',   # Incluir configurações
+        # Adicionar imports ocultos necessários
+        '--hidden-import=plyer.platforms.win.notification',
         '--hidden-import=google.auth.transport.requests',
         '--hidden-import=google_auth_oauthlib.flow',
         '--hidden-import=googleapiclient.discovery',
+        '--hidden-import=sqlalchemy.sql.default_comparator',  # SQLAlchemy
+        '--hidden-import=bcrypt',  # Para hash de senha
+        '--hidden-import=typing',
+        '--hidden-import=collections.abc',
     ]
     
     # Executar PyInstaller
     PyInstaller.__main__.run(args)
-    
-    # Copiar arquivos necessários
-    shutil.copytree("assets", os.path.join("dist", "assets"))
     
     print("Executável gerado com sucesso!")
     print("Localização: dist/AnimeProductivity.exe")
