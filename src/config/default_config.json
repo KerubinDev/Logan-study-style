@@ -1,0 +1,7 @@
+{
+    "theme": "dark",
+    "animations_enabled": true,
+    "particle_effects": true,
+    "character_enabled": true,
+    "sound_effects": true
+}
