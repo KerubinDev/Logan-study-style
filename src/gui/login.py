@@ -1,16 +1,16 @@
 from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 from PySide6.QtGui import *
-from src.database.models import User
-from src.gui.main_window import MainWindow
-from src.gui.register import RegisterWindow
+from src.services.auth_manager import AuthManager
 from src.gui.themes import Theme
 
 class LoginWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.theme = Theme()
+        self.auth_manager = AuthManager()
         self.setup_ui()
+        self.check_saved_session()
         
     def setup_ui(self):
         """Configura a interface de login."""
@@ -68,42 +68,48 @@ class LoginWindow(QMainWindow):
         # Register link
         register_btn = QPushButton("Criar nova conta")
         register_btn.setObjectName("linkButton")
-        register_btn.clicked.connect(self.show_register)
+        register_btn.clicked.connect(self.open_register)
         form_layout.addWidget(register_btn)
         
         layout.addWidget(form_frame)
         
+    def check_saved_session(self):
+        """Verifica se existe uma sessão ativa."""
+        user_id = self.auth_manager.check_session()
+        if user_id:
+            self.auto_login(user_id)
+            
+    def auto_login(self, user_id):
+        """Realiza login automático com sessão salva."""
+        user = self.auth_manager.get_user(user_id)
+        if user:
+            self.show_main_window(user.id)
+            
     def handle_login(self):
-        """Processa o login do usuário."""
+        """Processa a tentativa de login."""
         username = self.username_input.text()
         password = self.password_input.text()
         
-        if not username or not password:
-            error = QMessageBox()
-            error.setIcon(QMessageBox.Warning)
-            error.setText("Por favor, preencha todos os campos!")
-            error.setWindowTitle("Aviso")
-            error.exec()
-            return
-        
-        # Validar credenciais (implementar autenticação real)
-        user = User.authenticate(username, password)
-        
+        user = self.auth_manager.login(username, password)
         if user:
-            # Criar e mostrar janela principal
-            self.main_window = MainWindow(user.id)
-            self.main_window.show()
-            self.close()
+            self.show_main_window(user.id)
         else:
-            # Mostrar erro
-            error = QMessageBox()
-            error.setIcon(QMessageBox.Critical)
-            error.setText("Usuário ou senha incorretos!")
-            error.setWindowTitle("Erro")
-            error.exec()
+            QMessageBox.warning(
+                self,
+                "Erro",
+                "Usuário ou senha inválidos!"
+            )
             
-    def show_register(self):
-        """Mostra a janela de registro."""
+    def show_main_window(self, user_id):
+        """Mostra a janela principal."""
+        from src.gui.main_window import MainWindow  # Importação local para evitar circular
+        self.main_window = MainWindow(user_id)
+        self.main_window.show()
+        self.close()
+
+    def open_register(self):
+        # Importe RegisterWindow apenas quando necessário
+        from src.gui.register import RegisterWindow
         self.register_window = RegisterWindow()
         self.register_window.show()
         self.close()

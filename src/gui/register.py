@@ -3,7 +3,6 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from src.database.models import User
 from src.gui.themes import Theme
-from src.gui.login import LoginWindow
 
 class RegisterWindow(QMainWindow):
     def __init__(self):
@@ -125,6 +124,7 @@ class RegisterWindow(QMainWindow):
         
     def show_login(self):
         """Volta para a tela de login."""
+        from src.gui.login import LoginWindow
         self.login_window = LoginWindow()
         self.login_window.show()
         self.close() 

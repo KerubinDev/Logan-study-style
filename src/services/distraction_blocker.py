@@ -5,30 +5,33 @@ import sys
 from typing import List, Dict
 import json
 from src.config.settings import DISTRACTION_DEFAULTS
+from PySide6.QtWidgets import QMessageBox
 
 class DistractionBlocker:
     def __init__(self):
         self.hosts_path = r"C:\Windows\System32\drivers\etc\hosts"
-        self.blocked_sites = self._load_blocked_sites()
         self.is_active = False
+        self.blocked_sites = self._load_sites()
         
-    def _load_blocked_sites(self) -> Dict[str, List[str]]:
-        """Carrega a lista de sites bloqueados do arquivo de configuração."""
-        config_path = os.path.join("config", "blocked_sites.json")
+    def _load_sites(self) -> Dict[str, List[str]]:
+        """Carrega os sites bloqueados do arquivo ou usa os padrões."""
+        if os.path.exists('blocked_sites.json'):
+            try:
+                with open('blocked_sites.json', 'r') as f:
+                    return json.load(f)
+            except:
+                pass
+        return DISTRACTION_DEFAULTS.copy()
         
-        if os.path.exists(config_path):
-            with open(config_path, 'r') as f:
-                return json.load(f)
-        return DISTRACTION_DEFAULTS
-        
-    def _save_blocked_sites(self):
-        """Salva a lista de sites bloqueados."""
-        config_path = os.path.join("config", "blocked_sites.json")
-        os.makedirs("config", exist_ok=True)
-        
-        with open(config_path, 'w') as f:
+    def _save_sites(self):
+        """Salva os sites bloqueados em arquivo."""
+        with open('blocked_sites.json', 'w') as f:
             json.dump(self.blocked_sites, f, indent=4)
             
+    def get_sites(self) -> Dict[str, List[str]]:
+        """Retorna o dicionário de sites bloqueados."""
+        return self.blocked_sites
+        
     def _is_admin(self) -> bool:
         """Verifica se o programa está rodando como administrador."""
         try:
@@ -36,19 +39,25 @@ class DistractionBlocker:
         except:
             return False
             
-    def _require_admin(self):
-        """Reinicia o programa como administrador se necessário."""
+    def _request_admin(self) -> bool:
+        """Solicita privilégios de administrador sem fechar o programa."""
         if not self._is_admin():
-            ctypes.windll.shell32.ShellExecuteW(
-                None, "runas", sys.executable, " ".join(sys.argv), None, 1
+            # Mostrar mensagem ao usuário
+            QMessageBox.warning(
+                None,
+                "Permissão Necessária",
+                "O bloqueio de sites requer privilégios de administrador.\n"
+                "Por favor, execute o programa como administrador."
             )
-            sys.exit()
+            return False
+        return True
             
-    def start_blocking(self) -> tuple[bool, str]:
-        """Inicia o bloqueio de sites."""
+    def start_blocking(self) -> bool:
+        """Inicia o bloqueio dos sites."""
         try:
-            self._require_admin()
-            
+            if not self._request_admin():
+                return False
+                
             # Backup do arquivo hosts
             if not os.path.exists(f"{self.hosts_path}.bak"):
                 with open(self.hosts_path, 'r') as f:
@@ -71,16 +80,22 @@ class DistractionBlocker:
             os.system('ipconfig /flushdns')
             
             self.is_active = True
-            return True, "Bloqueio ativado com sucesso"
+            return True
             
         except Exception as e:
-            return False, f"Erro ao ativar bloqueio: {str(e)}"
+            QMessageBox.critical(
+                None,
+                "Erro",
+                f"Erro ao ativar bloqueio: {str(e)}"
+            )
+            return False
             
-    def stop_blocking(self) -> tuple[bool, str]:
-        """Para o bloqueio de sites."""
+    def stop_blocking(self) -> bool:
+        """Para o bloqueio dos sites."""
         try:
-            self._require_admin()
-            
+            if not self._request_admin():
+                return False
+                
             # Restaurar backup do arquivo hosts
             if os.path.exists(f"{self.hosts_path}.bak"):
                 with open(f"{self.hosts_path}.bak", 'r') as backup:
@@ -91,36 +106,35 @@ class DistractionBlocker:
             os.system('ipconfig /flushdns')
             
             self.is_active = False
-            return True, "Bloqueio desativado com sucesso"
+            return True
             
         except Exception as e:
-            return False, f"Erro ao desativar bloqueio: {str(e)}"
+            QMessageBox.critical(
+                None,
+                "Erro",
+                f"Erro ao desativar bloqueio: {str(e)}"
+            )
+            return False
             
-    def add_site(self, site: str, category: str = "Outros") -> tuple[bool, str]:
+    def add_site(self, site: str, category: str) -> bool:
         """Adiciona um site à lista de bloqueios."""
-        if category not in self.blocked_sites:
-            self.blocked_sites[category] = []
-            
-        if site not in self.blocked_sites[category]:
-            self.blocked_sites[category].append(site)
-            self._save_blocked_sites()
-            
-            # Atualizar bloqueio se ativo
-            if self.is_active:
-                return self.start_blocking()
+        try:
+            if category not in self.blocked_sites:
+                self.blocked_sites[category] = []
                 
-            return True, "Site adicionado com sucesso"
-        return False, "Site já está na lista"
-        
-    def remove_site(self, site: str, category: str) -> tuple[bool, str]:
+            if site not in self.blocked_sites[category]:
+                self.blocked_sites[category].append(site)
+                self._save_sites()
+            return True
+        except:
+            return False
+            
+    def remove_site(self, site: str, category: str) -> bool:
         """Remove um site da lista de bloqueios."""
-        if category in self.blocked_sites and site in self.blocked_sites[category]:
-            self.blocked_sites[category].remove(site)
-            self._save_blocked_sites()
-            
-            # Atualizar bloqueio se ativo
-            if self.is_active:
-                return self.start_blocking()
-                
-            return True, "Site removido com sucesso"
-        return False, "Site não encontrado" 
+        try:
+            if category in self.blocked_sites and site in self.blocked_sites[category]:
+                self.blocked_sites[category].remove(site)
+                self._save_sites()
+            return True
+        except:
+            return False 

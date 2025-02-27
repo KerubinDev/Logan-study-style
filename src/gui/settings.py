@@ -5,9 +5,9 @@ from src.database.models import AppConfig, PomodoroConfig
 from src.gui.themes import Theme
 
 class SettingsWindow(QDialog):
-    def __init__(self, user_id):
+    def __init__(self, parent):
         super().__init__()
-        self.user_id = user_id
+        self.user_id = parent.user_id
         self.theme = Theme()
         self.setup_ui()
         
@@ -147,4 +147,30 @@ class SettingsWindow(QDialog):
         session.close()
         
         QMessageBox.information(self, "Sucesso", "Configurações salvas com sucesso!")
-        self.accept() 
+        self.accept()
+        
+    def apply_settings(self):
+        """Aplica as configurações selecionadas."""
+        # Tema
+        theme = self.theme_combo.currentText()
+        self.parent().theme.set_theme(theme)
+        self.parent().apply_theme(theme)
+        
+        # Notificações
+        notifications_enabled = self.notifications_check.isChecked()
+        self.config.notifications_enabled = notifications_enabled
+        
+        # Pomodoro
+        work_time = self.work_time_spin.value()
+        break_time = self.break_time_spin.value()
+        long_break_time = self.long_break_spin.value()
+        
+        self.pomodoro_config.work_time = work_time
+        self.pomodoro_config.break_time = break_time
+        self.pomodoro_config.long_break_time = long_break_time
+        
+        self.session.commit()
+        
+        # Atualizar timer
+        self.parent().pomodoro_timer.total_time = work_time * 60
+        self.parent().pomodoro_timer.reset() 

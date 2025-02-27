@@ -74,12 +74,13 @@ class Task(Base):
     
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'))
-    title = Column(String(100), nullable=False)
-    description = Column(String(500))
+    title = Column(String)
+    description = Column(String)
     deadline = Column(DateTime)
-    status = Column(String(20), default='pending')  # pending, completed, cancelled
-    created_at = Column(DateTime, default=datetime.utcnow)
-    calendar_event_id = Column(String(100))  # ID do evento no Google Calendar
+    completed = Column(Boolean, default=False)
+    completion_date = Column(DateTime)
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     
     user = relationship("User", back_populates="tasks")
 

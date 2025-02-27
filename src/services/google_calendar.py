@@ -10,50 +10,49 @@ from src.database.database import get_session
 from src.config.settings import GOOGLE_API
 
 class GoogleCalendarService:
-    SCOPES = ['https://www.googleapis.com/auth/calendar']
-    
-    def __init__(self, user_id: int):
+    def __init__(self, user_id):
         self.user_id = user_id
-        self.session = get_session()
+        self.SCOPES = ['https://www.googleapis.com/auth/calendar']
         self.creds = None
+        self.credentials_file = 'credentials.json'
+        self.token_file = f'token_{user_id}.pickle'
+        self.session = get_session()
         self.service = None
-        self.token_path = os.path.join(
-            'tokens', f'token_{user_id}.pickle'
-        )
         
     def authenticate(self):
         """Autentica o usuário com o Google Calendar."""
-        # Carregar credenciais existentes
-        if os.path.exists(self.token_path):
-            with open(self.token_path, 'rb') as token:
-                self.creds = pickle.load(token)
-                
-        # Renovar credenciais se necessário
-        if not self.creds or not self.creds.valid:
-            if self.creds and self.creds.expired and self.creds.refresh_token:
-                self.creds.refresh(Request())
-            else:
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    GOOGLE_API['credentials_file'],
-                    self.SCOPES
-                )
-                self.creds = flow.run_local_server(port=0)
-                
-            # Salvar credenciais
-            os.makedirs('tokens', exist_ok=True)
-            with open(self.token_path, 'wb') as token:
-                pickle.dump(self.creds, token)
-                
-        self.service = build('calendar', 'v3', credentials=self.creds)
-        return True
-        
-    def sync_tasks(self):
-        """Sincroniza tarefas com o Google Calendar."""
-        if not self.service:
-            if not self.authenticate():
-                return False, "Falha na autenticação"
-                
         try:
+            if os.path.exists(self.token_file):
+                with open(self.token_file, 'rb') as token:
+                    self.creds = pickle.load(token)
+                    
+            if not self.creds or not self.creds.valid:
+                if self.creds and self.creds.expired and self.creds.refresh_token:
+                    self.creds.refresh(Request())
+                else:
+                    if not os.path.exists(self.credentials_file):
+                        return False
+                        
+                    flow = InstalledAppFlow.from_client_secrets_file(
+                        self.credentials_file, self.SCOPES)
+                    self.creds = flow.run_local_server(port=0)
+                    
+                with open(self.token_file, 'wb') as token:
+                    pickle.dump(self.creds, token)
+                    
+            self.service = build('calendar', 'v3', credentials=self.creds)
+            return True
+            
+        except Exception as e:
+            print(f"Erro na autenticação: {str(e)}")
+            return False
+            
+    def sync_tasks(self):
+        """Sincroniza as tarefas com o Google Calendar."""
+        try:
+            if not self.authenticate():
+                return False, "Falha na autenticação com o Google Calendar"
+                
             # Buscar tarefas não sincronizadas
             tasks = self.session.query(Task).filter(
                 Task.user_id == self.user_id,
@@ -85,10 +84,10 @@ class GoogleCalendarService:
                 task.calendar_event_id = created_event['id']
                 
             self.session.commit()
-            return True, "Tarefas sincronizadas com sucesso"
+            return True, "Sincronização realizada com sucesso!"
             
         except Exception as e:
-            return False, f"Erro ao sincronizar: {str(e)}"
+            return False, f"Erro na sincronização: {str(e)}"
             
     def update_task_event(self, task: Task):
         """Atualiza um evento existente no calendário."""

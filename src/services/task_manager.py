@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, date
 from sqlalchemy import and_
 from src.database.models import Task
 from src.database.database import get_session
@@ -8,29 +8,43 @@ class TaskManager:
         self.user_id = user_id
         self.session = get_session()
         
-    def add_task(self, title: str, description: str = "", deadline: str = None) -> Task:
+    def add_task(self, title: str, description: str = None, deadline: str = None):
         """Adiciona uma nova tarefa."""
         try:
-            deadline_date = datetime.strptime(deadline, "%Y-%m-%d") if deadline else None
-        except ValueError:
+            # Converter deadline string para datetime se fornecido
             deadline_date = None
+            if deadline:
+                try:
+                    deadline_date = datetime.strptime(deadline, "%Y-%m-%d %H:%M")
+                except ValueError:
+                    try:
+                        deadline_date = datetime.strptime(deadline, "%Y-%m-%d")
+                    except ValueError:
+                        pass
             
-        task = Task(
-            user_id=self.user_id,
-            title=title,
-            description=description,
-            deadline=deadline_date,
-            status='pending'
-        )
-        
-        self.session.add(task)
-        self.session.commit()
-        return task
-        
-    def get_today_tasks(self) -> list[Task]:
-        """Retorna as tarefas do dia atual."""
-        today = datetime.now().date()
-        tomorrow = today + timedelta(days=1)
+            # Criar nova tarefa
+            task = Task(
+                user_id=self.user_id,
+                title=title,
+                description=description,
+                deadline=deadline_date,
+                completed=False,
+                created_at=datetime.now()
+            )
+            
+            self.session.add(task)
+            self.session.commit()
+            return True
+            
+        except Exception as e:
+            print(f"Erro ao adicionar tarefa: {str(e)}")
+            self.session.rollback()
+            return False
+            
+    def get_today_tasks(self):
+        """Retorna as tarefas do dia."""
+        today = date.today()
+        tomorrow = date.today().replace(day=today.day + 1)
         
         return self.session.query(Task).filter(
             and_(
@@ -40,31 +54,20 @@ class TaskManager:
             )
         ).all()
         
-    def toggle_task(self, task_id: int) -> bool:
-        """Alterna o status da tarefa entre pendente e concluída."""
-        task = self.session.query(Task).filter(
-            and_(
-                Task.id == task_id,
-                Task.user_id == self.user_id
-            )
-        ).first()
-        
-        if task:
-            task.status = 'completed' if task.status == 'pending' else 'pending'
+    def complete_task(self, task_id: int):
+        """Marca uma tarefa como concluída."""
+        task = self.session.query(Task).get(task_id)
+        if task and task.user_id == self.user_id:
+            task.completed = True
+            task.completion_date = datetime.now()
             self.session.commit()
             return True
         return False
         
-    def delete_task(self, task_id: int) -> bool:
-        """Deleta uma tarefa."""
-        task = self.session.query(Task).filter(
-            and_(
-                Task.id == task_id,
-                Task.user_id == self.user_id
-            )
-        ).first()
-        
-        if task:
+    def delete_task(self, task_id: int):
+        """Remove uma tarefa."""
+        task = self.session.query(Task).get(task_id)
+        if task and task.user_id == self.user_id:
             self.session.delete(task)
             self.session.commit()
             return True

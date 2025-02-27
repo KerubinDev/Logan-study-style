@@ -26,19 +26,15 @@ POMODORO_DEFAULTS = {
 
 # Configurações de tema
 THEMES = {
-    'dark': {
-        'primary': '#1a1b26',
-        'secondary': '#24283b',
-        'accent': '#7aa2f7',
-        'text': '#a9b1d6',
-        'error': '#f7768e'
-    },
     'light': {
-        'primary': '#d5d6db',
-        'secondary': '#9699a3',
-        'accent': '#2ac3de',
-        'text': '#343b58',
-        'error': '#f7768e'
+        'background': '#ffffff',
+        'text': '#000000',
+        'accent': '#4a90e2'
+    },
+    'dark': {
+        'background': '#2d2d2d',
+        'text': '#ffffff',
+        'accent': '#4a90e2'
     }
 }
 

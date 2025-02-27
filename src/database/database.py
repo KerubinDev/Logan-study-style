@@ -18,6 +18,10 @@ def init_db():
     from src.database.models import Base
     Base.metadata.create_all(bind=engine)
     
+    # Executar migrações
+    from src.database.migrations import upgrade_database
+    upgrade_database()
+    
     # Criar usuário de teste se não existir
     session = get_session()
     from src.database.models import User

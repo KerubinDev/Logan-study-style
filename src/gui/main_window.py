@@ -10,9 +10,13 @@ from plyer import notification
 from src.gui.settings import SettingsWindow
 from tkinter import filedialog
 import os
-from src.gui.calendar_sync import CalendarSyncWindow
+from src.gui.calendar_view import CalendarWindow
 from src.gui.distraction_manager import DistractionManagerWindow
 from src.gui.themes import Theme
+from PySide6.QtCore import QTimer
+from src.services.session_manager import SessionManager
+from src.gui.login import LoginWindow
+from src.services.auth_manager import AuthManager
 
 class MainWindow(QMainWindow):
     def __init__(self, user_id):
@@ -22,6 +26,7 @@ class MainWindow(QMainWindow):
         self.pomodoro_timer = PomodoroTimer(user_id)
         self.task_manager = TaskManager(user_id)
         self.visual_effects = AnimeVisualEffects()
+        self.auth_manager = AuthManager()
         self.setup_ui()
         
     def setup_ui(self):
@@ -91,7 +96,7 @@ class MainWindow(QMainWindow):
             ("Tarefas", "📝", self.show_tasks),
             ("Estatísticas", "📊", self.show_stats),
             ("Configurações", "⚙️", self.show_settings),
-            ("Google Calendar", "📅", self.show_calendar_sync),
+            ("Agenda", "📅", self.show_calendar_sync),
             ("Bloqueio", "🚫", self.show_distraction_manager)
         ]
         
@@ -101,6 +106,12 @@ class MainWindow(QMainWindow):
             btn.clicked.connect(callback)
             nav_layout.addWidget(btn)
             
+        # Adicionar botão de logout
+        logout_button = QPushButton("🚪 Logout")
+        logout_button.setObjectName("navButton")
+        logout_button.clicked.connect(self.handle_logout)
+        nav_layout.addWidget(logout_button)
+        
         sidebar_layout.addWidget(nav_menu)
         sidebar_layout.addStretch()
         
@@ -156,24 +167,24 @@ class MainWindow(QMainWindow):
         # Título e botão de adicionar
         header_frame = QFrame()
         header_layout = QHBoxLayout(header_frame)
-        header_layout.setContentsMargins(10, 10, 10, 10)
         
         header_title = QLabel("Tarefas de Hoje")
-        header_title.setObjectName("headerTitle")
         header_title.setStyleSheet("font-size: 20pt; font-weight: bold;")
         header_layout.addWidget(header_title)
         
         add_button = QPushButton("+ Nova Tarefa")
-        add_button.setObjectName("addButton")
         add_button.clicked.connect(self.show_add_task_dialog)
         header_layout.addWidget(add_button)
         
         tasks_layout.addWidget(header_frame)
         
         # Lista de tarefas
-        self.tasks_list = QWidget()
-        self.tasks_list.setObjectName("tasksList")
+        self.tasks_list = QFrame()
+        tasks_list_layout = QVBoxLayout(self.tasks_list)  # Adicionar layout aqui
+        self.tasks_list.setLayout(tasks_list_layout)
         tasks_layout.addWidget(self.tasks_list)
+        
+        layout.addWidget(self.tasks_frame)
         
         # Carregar tarefas do usuário
         self.load_tasks()
@@ -207,6 +218,12 @@ class MainWindow(QMainWindow):
             
             stats_layout.addWidget(stat_frame)
         
+        # Criar e conectar o botão de estatísticas aqui
+        self.stats_button = QPushButton("Ver Estatísticas Detalhadas")
+        self.stats_button.setObjectName("statsButton")
+        self.stats_button.clicked.connect(self.show_statistics)
+        stats_layout.addWidget(self.stats_button)
+        
         # Botão de relatório
         report_button = QPushButton("Gerar Relatório Semanal")
         report_button.setObjectName("reportButton")
@@ -220,7 +237,8 @@ class MainWindow(QMainWindow):
         self.pomodoro_timer.start()
         self.start_button.setEnabled(False)
         self.pause_button.setEnabled(True)
-        self.update_timer()
+        self.reset_button.setEnabled(True)
+        QTimer.singleShot(1000, self.update_timer)  # Importante: iniciar o timer
         
     def pause_pomodoro(self):
         """Pausa o timer Pomodoro."""
@@ -239,13 +257,12 @@ class MainWindow(QMainWindow):
         """Atualiza o display do timer."""
         if self.pomodoro_timer.is_running:
             remaining = self.pomodoro_timer.get_remaining_time()
-            self.timer_label.setText(f"{remaining//60:02d}:{remaining%60:02d}")
-            
             if remaining > 0:
-                self.timer_canvas.setPixmap(QPixmap("path_to_running_timer_image.png"))
-                self.start_button.setEnabled(False)
-                self.pause_button.setEnabled(True)
-                self.after(1000, self.update_timer)
+                minutes = remaining // 60
+                seconds = remaining % 60
+                self.timer_label.setText(f"{minutes:02d}:{seconds:02d}")
+                self.pomodoro_timer.time_remaining -= 1
+                QTimer.singleShot(1000, self.update_timer)
             else:
                 self.show_break_notification()
                 self.reset_pomodoro()
@@ -260,7 +277,14 @@ class MainWindow(QMainWindow):
         )
         
     def load_tasks(self):
-        """Carrega as tarefas do usuário."""
+        """Carrega e exibe as tarefas do usuário."""
+        # Limpar lista atual
+        while self.tasks_list.layout().count():
+            child = self.tasks_list.layout().takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+        
+        # Carregar tarefas do dia
         tasks = self.task_manager.get_today_tasks()
         
         for task in tasks:
@@ -275,12 +299,19 @@ class MainWindow(QMainWindow):
         checkbox = QCheckBox()
         checkbox.setObjectName("taskCheckbox")
         checkbox.setText(task.title)
-        checkbox.stateChanged.connect(lambda: self.toggle_task(task.id))
+        checkbox.setChecked(task.completed)  # Definir estado inicial
+        checkbox.stateChanged.connect(lambda state, t=task.id: self.toggle_task(t))
         task_layout.addWidget(checkbox)
+        
+        # Adicionar deadline se existir
+        if task.deadline:
+            deadline_label = QLabel(task.deadline.strftime("%d/%m/%Y %H:%M"))
+            deadline_label.setStyleSheet("color: gray;")
+            task_layout.addWidget(deadline_label)
         
         delete_button = QPushButton("🗑️")
         delete_button.setObjectName("deleteButton")
-        delete_button.clicked.connect(lambda: self.delete_task(task.id))
+        delete_button.clicked.connect(lambda _, t=task.id: self.delete_task(t))
         task_layout.addWidget(delete_button)
         
         self.tasks_list.layout().addWidget(task_frame)
@@ -292,15 +323,21 @@ class MainWindow(QMainWindow):
         
     def show_dashboard(self):
         """Mostra a página do dashboard."""
-        pass
+        self.pomodoro_frame.show()
+        self.tasks_frame.show()
+        self.stats_frame.show()
         
     def show_tasks(self):
         """Mostra a página de tarefas."""
-        pass
+        self.tasks_frame.show()
+        self.pomodoro_frame.hide()
+        self.stats_frame.hide()
         
     def show_stats(self):
         """Mostra a página de estatísticas."""
-        pass
+        self.stats_frame.show()
+        self.pomodoro_frame.hide()
+        self.tasks_frame.hide()
         
     def show_settings(self):
         """Mostra a página de configurações."""
@@ -308,8 +345,8 @@ class MainWindow(QMainWindow):
         settings_window.exec()
         
     def show_calendar_sync(self):
-        """Mostra a janela de sincronização com Google Calendar."""
-        calendar_window = CalendarSyncWindow(self)
+        """Mostra o calendário de tarefas."""
+        calendar_window = CalendarWindow(self)
         calendar_window.exec()
         
     def show_distraction_manager(self):
@@ -368,10 +405,79 @@ class MainWindow(QMainWindow):
                 error_window.setText(f"Erro ao gerar relatório:\n{str(e)}")
                 error_window.exec()
 
+    def show_statistics(self):
+        """Mostra a janela de estatísticas."""
+        from src.gui.statistics import StatisticsWindow
+        stats_window = StatisticsWindow(self)
+        stats_window.exec()  # Use exec() para diálogos modais
+
+    def toggle_task(self, task_id: int):
+        """Alterna o estado de conclusão da tarefa."""
+        if self.task_manager.complete_task(task_id):
+            # Recarregar a lista de tarefas para atualizar a interface
+            self.load_tasks()
+            
+            # Atualizar estatísticas
+            self.update_stats()
+            
+            # Mostrar notificação
+            notification.notify(
+                title="Tarefa Concluída",
+                message="Parabéns! Continue assim! 🎉",
+                timeout=5
+            )
+    
+    def delete_task(self, task_id: int):
+        """Remove uma tarefa."""
+        # Confirmar exclusão
+        confirm = QMessageBox.question(
+            self,
+            "Confirmar Exclusão",
+            "Tem certeza que deseja excluir esta tarefa?",
+            QMessageBox.Yes | QMessageBox.No
+        )
+        
+        if confirm == QMessageBox.Yes:
+            if self.task_manager.delete_task(task_id):
+                # Recarregar a lista de tarefas
+                self.load_tasks()
+                
+                # Atualizar estatísticas
+                self.update_stats()
+                
+                # Mostrar notificação
+                notification.notify(
+                    title="Tarefa Removida",
+                    message="A tarefa foi removida com sucesso.",
+                    timeout=5
+                )
+    
+    def update_stats(self):
+        """Atualiza as estatísticas exibidas."""
+        # Implementar atualização das estatísticas aqui
+        pass
+
+    def handle_logout(self):
+        """Processa o logout do usuário."""
+        confirm = QMessageBox.question(
+            self,
+            "Confirmar Logout",
+            "Tem certeza que deseja sair?",
+            QMessageBox.Yes | QMessageBox.No
+        )
+        
+        if confirm == QMessageBox.Yes:
+            self.auth_manager.logout()
+            self.close()
+            
+            # Mostrar nova janela de login
+            login = LoginWindow()
+            login.show()
+
 class AddTaskDialog(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
-        self.parent = parent
+        self.parent_window = parent
         
         self.setWindowTitle("Nova Tarefa")
         self.setMinimumSize(400, 300)
@@ -389,8 +495,11 @@ class AddTaskDialog(QDialog):
         layout.addWidget(self.description_label)
         layout.addWidget(self.description_entry)
         
+        # Usar QDateTimeEdit para deadline
         self.deadline_label = QLabel("Deadline:")
-        self.deadline_entry = QLineEdit()
+        self.deadline_entry = QDateTimeEdit()
+        self.deadline_entry.setCalendarPopup(True)
+        self.deadline_entry.setDateTime(QDateTime.currentDateTime())
         layout.addWidget(self.deadline_label)
         layout.addWidget(self.deadline_entry)
         
@@ -405,16 +514,15 @@ class AddTaskDialog(QDialog):
         buttons_layout.addWidget(self.cancel_button)
         
         layout.addLayout(buttons_layout)
-        
         self.setLayout(layout)
         
     def save_task(self):
         """Salva a nova tarefa."""
         title = self.title_entry.text()
         description = self.description_entry.toPlainText()
-        deadline = self.deadline_entry.text()
+        deadline = self.deadline_entry.dateTime().toString("yyyy-MM-dd HH:mm")
         
         if title:
-            self.parent.task_manager.add_task(title, description, deadline)
-            self.parent.load_tasks()  # Recarrega a lista de tarefas
+            self.parent_window.task_manager.add_task(title, description, deadline)
+            self.parent_window.load_tasks()
             self.accept() 
