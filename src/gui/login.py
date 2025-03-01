@@ -12,12 +12,11 @@ class LoginWindow(QMainWindow):
         self.theme = Theme()
         self.auth_manager = AuthManager()
         self.setup_ui()
-        self.check_saved_session()
         
     def setup_ui(self):
         """Configura a interface de login."""
-        self.setWindowTitle("Login - AnimeProductivity")
-        self.setFixedSize(400, 500)
+        self.setWindowTitle("Login - Matemática em Evidência")
+        self.setFixedSize(400, 600)
         self.setStyleSheet(self.theme.get_main_style())
         
         # Widget central
@@ -27,26 +26,46 @@ class LoginWindow(QMainWindow):
         # Layout principal
         layout = QVBoxLayout(central_widget)
         layout.setContentsMargins(40, 40, 40, 40)
-        layout.setSpacing(20)
+        layout.setSpacing(30)
         
         # Logo
         logo_frame = QFrame()
         logo_frame.setObjectName("logoWidget")
         logo_layout = QVBoxLayout(logo_frame)
         
-        logo_title = QLabel("アニメ")
-        logo_title.setObjectName("logoTitle")
-        logo_subtitle = QLabel("Productivity")
-        logo_subtitle.setObjectName("logoSubtitle")
+        if self.theme.logo:
+            logo_label = QLabel()
+            logo_label.setObjectName("logoImage")
+            
+            # Criar um QPixmap circular
+            original_pixmap = self.theme.logo
+            target_size = 150
+            scaled_pixmap = original_pixmap.scaled(
+                target_size, target_size,
+                Qt.KeepAspectRatio,
+                Qt.SmoothTransformation
+            )
+            
+            # Criar máscara circular
+            mask = QBitmap(scaled_pixmap.size())
+            mask.fill(Qt.color0)
+            painter = QPainter(mask)
+            painter.setBrush(Qt.color1)
+            painter.setPen(Qt.color1)
+            painter.drawEllipse(0, 0, target_size, target_size)
+            painter.end()
+            
+            scaled_pixmap.setMask(mask)
+            logo_label.setPixmap(scaled_pixmap)
+            logo_layout.addWidget(logo_label, alignment=Qt.AlignCenter)
         
-        logo_layout.addWidget(logo_title, alignment=Qt.AlignCenter)
-        logo_layout.addWidget(logo_subtitle, alignment=Qt.AlignCenter)
         layout.addWidget(logo_frame)
         
         # Formulário
         form_frame = QFrame()
-        form_frame.setObjectName("card")
+        form_frame.setObjectName("formCard")
         form_layout = QVBoxLayout(form_frame)
+        form_layout.setSpacing(15)
         
         # Username
         self.username_input = QLineEdit()
@@ -75,18 +94,6 @@ class LoginWindow(QMainWindow):
         
         layout.addWidget(form_frame)
         
-    def check_saved_session(self):
-        """Verifica se existe uma sessão ativa."""
-        user_id = self.auth_manager.check_session()
-        if user_id:
-            self.auto_login(user_id)
-            
-    def auto_login(self, user_id):
-        """Realiza login automático com sessão salva."""
-        user = self.auth_manager.get_user(user_id)
-        if user:
-            self.show_main_window(user.id)
-            
     def handle_login(self):
         """Processa a tentativa de login."""
         try:
@@ -108,13 +115,11 @@ class LoginWindow(QMainWindow):
                 QMessageBox.warning(
                     self,
                     "Erro",
-                    "Usuário ou senha inválidos!"
+                    "Usuário ou senha inválidos!\n\n"
+                    "Use as credenciais de teste:\n"
+                    "Usuário: test\n"
+                    "Senha: test123"
                 )
-                
-            # Log de debug
-            log_file = os.path.join(get_data_dir(), 'login.log')
-            with open(log_file, 'a') as f:
-                f.write(f"\nTentativa de login - usuário: {username}, sucesso: {user is not None}")
                 
         except Exception as e:
             QMessageBox.critical(
@@ -122,10 +127,6 @@ class LoginWindow(QMainWindow):
                 "Erro",
                 f"Erro ao fazer login: {str(e)}"
             )
-            # Log de erro
-            log_file = os.path.join(get_data_dir(), 'error.log')
-            with open(log_file, 'a') as f:
-                f.write(f"\nErro no login: {str(e)}")
             
     def show_main_window(self, user_id):
         """Mostra a janela principal."""

@@ -1,7 +1,9 @@
 import sys
 from PySide6.QtWidgets import QApplication
 from src.gui.login import LoginWindow
+from src.gui.main_window import MainWindow
 from src.database.database import init_db, get_data_dir
+from src.services.session_manager import SessionManager
 import os
 from datetime import datetime
 
@@ -16,8 +18,20 @@ def main():
         
         # Iniciar aplicação
         app = QApplication(sys.argv)
-        login = LoginWindow()
-        login.show()
+        
+        # Verificar sessão existente
+        session_manager = SessionManager()
+        user_id = session_manager.get_active_session()
+        
+        if user_id:
+            # Se existe sessão válida, abrir direto a janela principal
+            window = MainWindow(user_id)
+            window.show()
+        else:
+            # Se não existe sessão, mostrar login
+            login = LoginWindow()
+            login.show()
+            
         sys.exit(app.exec())
         
     except Exception as e:

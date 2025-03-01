@@ -5,7 +5,7 @@ from src.config.settings import THEMES, POMODORO_DEFAULTS
 from src.services.pomodoro import PomodoroTimer
 from src.services.task_manager import TaskManager
 from src.services.report_generator import ReportGenerator
-from src.gui.visual_effects import AnimeVisualEffects
+from src.gui.visual_effects import SimpleEffects
 from plyer import notification
 from src.gui.settings import SettingsWindow
 from tkinter import filedialog
@@ -25,14 +25,14 @@ class MainWindow(QMainWindow):
         self.theme = Theme()
         self.pomodoro_timer = PomodoroTimer(user_id)
         self.task_manager = TaskManager(user_id)
-        self.visual_effects = AnimeVisualEffects()
+        self.effects = SimpleEffects()
         self.auth_manager = AuthManager()
         self.setup_ui()
         
     def setup_ui(self):
         """Configura a interface principal."""
         # Configuração da janela
-        self.setWindowTitle("AnimeProductivity")
+        self.setWindowTitle("Matemática em Evidência - Study Style")
         self.setMinimumSize(1200, 800)
         self.setStyleSheet(self.theme.get_main_style())
         
@@ -75,14 +75,42 @@ class MainWindow(QMainWindow):
         logo_widget = QWidget()
         logo_widget.setObjectName("logoWidget")
         logo_layout = QVBoxLayout(logo_widget)
+        logo_layout.setAlignment(Qt.AlignCenter)
         
-        logo_title = QLabel("アニメ")
-        logo_title.setObjectName("logoTitle")
-        logo_subtitle = QLabel("Productivity")
-        logo_subtitle.setObjectName("logoSubtitle")
-        
-        logo_layout.addWidget(logo_title, alignment=Qt.AlignCenter)
-        logo_layout.addWidget(logo_subtitle, alignment=Qt.AlignCenter)
+        if self.theme.logo:
+            logo_label = QLabel()
+            logo_label.setObjectName("sidebarLogoImage")
+            
+            # Criar um QPixmap circular
+            original_pixmap = self.theme.logo
+            target_size = 100  # Tamanho menor para a sidebar
+            scaled_pixmap = original_pixmap.scaled(target_size, target_size, 
+                                                 Qt.KeepAspectRatio, 
+                                                 Qt.SmoothTransformation)
+            
+            # Criar uma máscara circular
+            mask = QBitmap(scaled_pixmap.size())
+            mask.fill(Qt.color0)
+            painter = QPainter(mask)
+            painter.setBrush(Qt.color1)
+            painter.setPen(Qt.color1)
+            painter.drawEllipse(0, 0, target_size, target_size)
+            painter.end()
+            
+            # Aplicar a máscara
+            scaled_pixmap.setMask(mask)
+            logo_label.setPixmap(scaled_pixmap)
+            logo_label.setFixedSize(target_size, target_size)
+            logo_layout.addWidget(logo_label)
+        else:
+            # Fallback para texto
+            logo_title = QLabel("MATEMÁTICA")
+            logo_title.setObjectName("logoTitle")
+            logo_subtitle = QLabel("em evidência")
+            logo_subtitle.setObjectName("logoSubtitle")
+            logo_layout.addWidget(logo_title)
+            logo_layout.addWidget(logo_subtitle)
+            
         sidebar_layout.addWidget(logo_widget)
         
         # Menu de navegação

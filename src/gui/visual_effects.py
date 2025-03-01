@@ -1,52 +1,22 @@
-import customtkinter as ctk
-from src.utils.asset_manager import AssetManager
+from PySide6.QtWidgets import QMessageBox
 
-class AnimeVisualEffects:
-    def __init__(self):
-        self.asset_manager = AssetManager()
-        
-    def create_icon_button(self, parent: ctk.CTk, icon_name: str, 
-                          command=None, text: str = "") -> ctk.CTkButton:
-        """Cria um botão com emoji."""
-        emoji = self.asset_manager.get_emoji(icon_name)
-        
-        return ctk.CTkButton(
-            parent,
-            text=f"{emoji} {text}",
-            command=command,
-            compound="left"
+class SimpleEffects:
+    """Classe simplificada para notificações básicas"""
+    
+    @staticmethod
+    def show_level_up(level: int):
+        """Mostra uma mensagem simples de level up."""
+        QMessageBox.information(
+            None,
+            "Novo Nível!",
+            f"Parabéns! Você alcançou o nível {level}!"
         )
-        
-    def apply_anime_style(self, window: ctk.CTk):
-        """Aplica estilo visual à janela."""
-        pass
-        
-    def show_level_up_animation(self, window: ctk.CTk, level: int):
-        """Mostra uma notificação de level up."""
-        popup = ctk.CTkToplevel(window)
-        popup.title("Level Up!")
-        popup.geometry("300x150")
-        
-        ctk.CTkLabel(
-            popup,
-            text=f"⭐ LEVEL UP! ⭐\nNível {level}",
-            font=("Roboto", 24, "bold")
-        ).pack(pady=20)
-        
-        # Fechar automaticamente após 3 segundos
-        window.after(3000, popup.destroy)
-        
-    def show_achievement_popup(self, window: ctk.CTk, achievement_name: str):
-        """Mostra um popup de conquista."""
-        popup = ctk.CTkToplevel(window)
-        popup.title("Nova Conquista!")
-        popup.geometry("300x100")
-        
-        ctk.CTkLabel(
-            popup,
-            text=f"🏆 {achievement_name}",
-            font=("Roboto", 16, "bold")
-        ).pack(pady=20)
-        
-        # Fechar automaticamente após 3 segundos
-        window.after(3000, popup.destroy) 
+    
+    @staticmethod
+    def show_achievement(achievement_name: str):
+        """Mostra uma mensagem simples de conquista."""
+        QMessageBox.information(
+            None,
+            "Nova Conquista!",
+            f"Parabéns! Você conquistou: {achievement_name}"
+        ) 

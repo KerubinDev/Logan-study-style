@@ -12,11 +12,11 @@ class User(Base):
     __tablename__ = 'users'
     
     id = Column(Integer, primary_key=True)
-    username = Column(String(50), unique=True, nullable=False)
-    email = Column(String(120), unique=True, nullable=True)  # Tornando email opcional
-    password_hash = Column(String(128), nullable=False)
+    username = Column(String, unique=True, nullable=False)
+    email = Column(String, unique=True)
+    password_hash = Column(String, nullable=False)
     access_level = Column(Integer, default=0)  # 0=normal, 1=admin
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
     
     # Relacionamentos
     tasks = relationship("Task", back_populates="user")
@@ -38,36 +38,40 @@ class User(Base):
     
     @staticmethod
     def create(username: str, password: str, email: str = None) -> 'User':
-        """Cria um novo usuário."""
+        """Cria um novo usuário com senha criptografada."""
         session = get_session()
-        
-        # Verificar se usuário já existe
-        if session.query(User).filter_by(username=username).first():
-            return None
+        try:
+            # Gerar hash da senha
+            password_hash = bcrypt.hashpw(
+                password.encode('utf-8'), 
+                bcrypt.gensalt()
+            ).decode('utf-8')
             
-        # Criar novo usuário
-        password_hash = User.hash_password(password)
-        user = User(
-            username=username,
-            email=email,
-            password_hash=password_hash
-        )
-        
-        session.add(user)
-        session.commit()
-        
-        return user
+            # Criar usuário
+            user = User(
+                username=username,
+                password_hash=password_hash,
+                email=email
+            )
+            session.add(user)
+            session.commit()
+            return user
+        except Exception as e:
+            session.rollback()
+            raise e
+        finally:
+            session.close()
     
-    @staticmethod
-    def hash_password(password: str) -> str:
-        """Gera um hash da senha."""
-        salt = bcrypt.gensalt()
-        return bcrypt.hashpw(password.encode(), salt).decode()
-    
-    @staticmethod
-    def verify_password(password: str, password_hash: str) -> bool:
+    def verify_password(self, password: str) -> bool:
         """Verifica se a senha está correta."""
-        return bcrypt.checkpw(password.encode(), password_hash.encode())
+        try:
+            return bcrypt.checkpw(
+                password.encode('utf-8'),
+                self.password_hash.encode('utf-8')
+            )
+        except Exception as e:
+            print(f"Erro ao verificar senha: {e}")
+            return False
 
 class Task(Base):
     __tablename__ = 'tasks'

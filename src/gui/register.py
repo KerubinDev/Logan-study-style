@@ -12,7 +12,7 @@ class RegisterWindow(QMainWindow):
         
     def setup_ui(self):
         """Configura a interface de registro."""
-        self.setWindowTitle("Registro - AnimeProductivity")
+        self.setWindowTitle("Registro - Matemática em Evidência")
         self.setFixedSize(400, 600)
         self.setStyleSheet(self.theme.get_main_style())
         
@@ -30,9 +30,9 @@ class RegisterWindow(QMainWindow):
         logo_frame.setObjectName("logoWidget")
         logo_layout = QVBoxLayout(logo_frame)
         
-        logo_title = QLabel("アニメ")
+        logo_title = QLabel("MATEMÁTICA")
         logo_title.setObjectName("logoTitle")
-        logo_subtitle = QLabel("Productivity")
+        logo_subtitle = QLabel("em evidência")
         logo_subtitle.setObjectName("logoSubtitle")
         
         logo_layout.addWidget(logo_title, alignment=Qt.AlignCenter)

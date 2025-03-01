@@ -13,17 +13,19 @@ class AssetDownloader:
         self.anime_dir = self.assets_dir / "anime"
         self.sprites_dir = self.assets_dir / "sprites"
         
-        # URLs dos recursos (exemplo - você deve hospedar estes arquivos em um repositório próprio)
+        # URLs dos recursos
         self.resources = {
             "icons": {
-                "url": "https://github.com/seu-repo/anime-productivity/releases/download/v1.0/icons.zip",
+                "url": "https://github.com/seu-repo/logan-study-style/releases/download/v1.0/icons.zip",
                 "files": [
                     "app.ico",
                     "google_calendar.png",
                     "settings.png",
                     "tasks.png",
                     "timer.png",
-                    "achievements.png"
+                    "achievements.png",
+                    "study.png",
+                    "focus.png"
                 ]
             },
             "anime": {

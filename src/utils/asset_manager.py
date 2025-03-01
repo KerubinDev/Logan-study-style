@@ -29,9 +29,13 @@ class AssetManager:
             "play": "▶️",
             "stop": "⏹️",
             "reset": "🔄",
-            "level": "⭐",
-            "achievement": "🏆",
-            "exit": "🚪"
+            "level": "📚",
+            "achievement": "🎯",
+            "exit": "🚪",
+            "study": "✏️",
+            "focus": "🧮",
+            "math": "➗",
+            "formula": "📐"
         }
         
         # URLs das APIs
