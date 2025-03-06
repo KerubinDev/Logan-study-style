@@ -59,6 +59,7 @@ class Theme:
             'bg_dark': '#1e2124',      # Cinza escuro
             'bg_darker': '#16181a',     # Cinza mais escuro
             'bg_light': '#282b30',      # Cinza médio
+            'bg_lighter': '#36393f',    # Cinza mais claro (nova cor)
             'fg': '#ffffff',            # Branco
             'accent': '#4169E1',        # Azul royal (cor principal)
             'success': '#43b581',       # Verde suave
@@ -108,247 +109,208 @@ class Theme:
 
     def get_main_style(self):
         return f"""
-            QMainWindow {{
-                background: qlineargradient(
-                    x1: 0, y1: 0, x2: 1, y2: 1,
-                    stop: 0 {self.colors['bg_dark']},
-                    stop: 1 {self.colors['bg_darker']}
-                );
-            }}
-            
-            /* Sidebar */
-            #sidebar {{
-                background-color: rgba(22, 24, 26, 0.95);
-                border-right: 1px solid rgba(40, 43, 48, 0.5);
-                min-width: 250px;
-                padding: 20px 0;
-            }}
-            
-            /* Logo */
-            #sidebarLogoImage {{
-                border: 3px solid {self.colors['accent']};
-                border-radius: 60px;
-                padding: 3px;
-                margin: 10px;
-                background: qlineargradient(
-                    x1: 0, y1: 0, x2: 1, y2: 1,
-                    stop: 0 {self.colors['bg_dark']},
-                    stop: 1 {self.colors['bg_darker']}
-                );
-            }}
-            
-            /* Botões de Navegação */
-            #navButton {{
-                background-color: transparent;
+            /* Títulos e Textos */
+            #pageTitle {{
                 color: {self.colors['fg']};
-                border: none;
-                padding: 15px 25px;
-                text-align: left;
+                font-size: 24px;
+                font-weight: bold;
+            }}
+            
+            #pageDescription {{
+                color: {self.colors['fg']};
                 font-size: 14px;
-                border-radius: 12px;
-                margin: 5px 15px;
-                font-weight: 500;
-            }}
-            
-            #navButton:hover {{
-                background: qlineargradient(
-                    x1: 0, y1: 0, x2: 1, y2: 0,
-                    stop: 0 rgba(65, 105, 225, 0.1),
-                    stop: 1 rgba(65, 105, 225, 0.2)
-                );
-                color: {self.colors['accent']};
-                padding-left: 35px;
-            }}
-            
-            /* Timer Display */
-            #timerLabel {{
-                color: {self.colors['fg']};
-                font-size: 82px;
-                font-weight: bold;
-                padding: 40px;
-                background: qlineargradient(
-                    x1: 0, y1: 0, x2: 1, y2: 1,
-                    stop: 0 {self.colors['bg_darker']},
-                    stop: 1 rgba(22, 24, 26, 0.95)
-                );
-                border-radius: 25px;
-                border: 1px solid rgba(65, 105, 225, 0.3);
-            }}
-            
-            /* Botões do Timer */
-            #startButton, #pauseButton, #resetButton {{
-                padding: 15px 35px;
-                border-radius: 12px;
-                font-size: 16px;
-                font-weight: bold;
-                margin: 10px;
-                min-width: 140px;
-            }}
-            
-            #startButton {{
-                background: qlineargradient(
-                    x1: 0, y1: 0, x2: 1, y2: 0,
-                    stop: 0 {self.colors['accent']},
-                    stop: 1 {self.colors['secondary']}
-                );
-                color: white;
-                border: none;
-            }}
-            
-            #startButton:hover {{
-                background: qlineargradient(
-                    x1: 0, y1: 0, x2: 1, y2: 0,
-                    stop: 0 {self.colors['secondary']},
-                    stop: 1 {self.colors['accent']}
-                );
-            }}
-            
-            #pauseButton {{
-                background-color: rgba(22, 24, 26, 0.95);
-                color: {self.colors['fg']};
-                border: 2px solid {self.colors['accent']};
-            }}
-            
-            #pauseButton:hover {{
-                background-color: rgba(65, 105, 225, 0.1);
-                border-color: {self.colors['secondary']};
-            }}
-            
-            #resetButton {{
-                background-color: rgba(237, 66, 69, 0.1);
-                color: {self.colors['error']};
-                border: 2px solid {self.colors['error']};
-            }}
-            
-            #resetButton:hover {{
-                background-color: {self.colors['error']};
-                color: white;
-            }}
-            
-            /* Cards */
-            QFrame#card {{
-                background: qlineargradient(
-                    x1: 0, y1: 0, x2: 1, y2: 1,
-                    stop: 0 {self.colors['bg_darker']},
-                    stop: 1 rgba(22, 24, 26, 0.95)
-                );
-                border-radius: 15px;
-                padding: 25px;
-                border: 1px solid rgba(65, 105, 225, 0.2);
-            }}
-            
-            QFrame#card:hover {{
-                border: 1px solid {self.colors['accent']};
-            }}
-            
-            /* Estatísticas */
-            #statTitle {{
-                color: {self.colors['fg']};
-                font-size: 16px;
                 opacity: 0.8;
-                font-weight: 500;
-                margin-bottom: 5px;
             }}
             
-            #statValue {{
+            #sectionTitle {{
                 color: {self.colors['fg']};
-                font-size: 36px;
+                font-size: 18px;
                 font-weight: bold;
             }}
             
-            /* Lista de Tarefas */
-            #taskCheckbox {{
-                color: {self.colors['fg']};
-                font-size: 15px;
-                padding: 12px;
-                spacing: 10px;
-                border-radius: 8px;
-                background: transparent;
-            }}
-            
-            #taskCheckbox:hover {{
-                color: {self.colors['accent']};
-                background: rgba(65, 105, 225, 0.1);
-                padding-left: 20px;
-            }}
-            
-            /* Botões de Ação */
-            #actionButton {{
-                background: rgba(65, 105, 225, 0.1);
-                color: {self.colors['fg']};
-                border: 1px solid rgba(65, 105, 225, 0.3);
-                padding: 12px 25px;
+            /* Cards e Seções */
+            #sectionCard {{
+                background: {self.colors['bg_darker']};
                 border-radius: 12px;
-                font-size: 14px;
-                font-weight: 500;
+                padding: 20px;
+                margin: 5px 0;
             }}
             
-            #actionButton:hover {{
-                background: qlineargradient(
-                    x1: 0, y1: 0, x2: 1, y2: 0,
-                    stop: 0 {self.colors['accent']},
-                    stop: 1 {self.colors['secondary']}
-                );
+            #helpCard {{
+                background: rgba(0, 0, 0, 0.2);
+                border-radius: 12px;
+                padding: 20px;
+                margin: 5px 0;
+            }}
+            
+            #subjectCard {{
+                background: {self.colors['bg_darker']};
+                border-radius: 10px;
+                padding: 15px;
+                margin: 5px 0;
+            }}
+            
+            /* Tabela */
+            #subjectsTable {{
+                background: transparent;
+                border: none;
+                gridline-color: rgba(255, 255, 255, 0.1);
+            }}
+            
+            #subjectsTable::item {{
+                padding: 8px;
+                color: {self.colors['fg']};
+            }}
+            
+            #subjectsTable::header {{
+                background: {self.colors['bg_light']};
+                padding: 8px;
+                border: none;
+            }}
+            
+            /* Botões */
+            #primaryButton {{
+                background: {self.colors['accent']};
                 color: white;
                 border: none;
-            }}
-            
-            /* Área de Conteúdo */
-            #contentArea {{
-                background: transparent;
-                padding: 30px;
-            }}
-            
-            /* Scrollbars */
-            QScrollBar:vertical {{
-                border: none;
-                background: {self.colors['bg_darker']};
-                width: 10px;
-                margin: 0;
-                border-radius: 5px;
-            }}
-            
-            QScrollBar::handle:vertical {{
-                background: qlineargradient(
-                    x1: 0, y1: 0, x2: 1, y2: 0,
-                    stop: 0 {self.colors['accent']},
-                    stop: 1 {self.colors['secondary']}
-                );
-                border-radius: 5px;
-                min-height: 30px;
-            }}
-            
-            QScrollBar::handle:vertical:hover {{
-                background: qlineargradient(
-                    x1: 0, y1: 0, x2: 1, y2: 0,
-                    stop: 0 {self.colors['secondary']},
-                    stop: 1 {self.colors['accent']}
-                );
-            }}
-            
-            /* Input Fields */
-            QLineEdit {{
-                background-color: rgba(22, 24, 26, 0.95);
-                color: {self.colors['fg']};
-                border: 1px solid rgba(65, 105, 225, 0.3);
-                padding: 12px;
+                padding: 10px 20px;
                 border-radius: 8px;
-                font-size: 14px;
-                selection-background-color: {self.colors['accent']};
+                font-weight: bold;
             }}
             
-            QLineEdit:focus {{
-                border: 2px solid {self.colors['accent']};
-                background-color: rgba(22, 24, 26, 0.98);
+            #primaryButton:hover {{
+                background: {self.colors['secondary']};
             }}
             
-            /* Tooltips */
-            QToolTip {{
-                background-color: {self.colors['bg_darker']};
+            #accentButton {{
+                background: linear-gradient(45deg, {self.colors['accent']}, {self.colors['secondary']});
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 8px;
+                font-weight: bold;
+            }}
+            
+            /* Elementos do Card */
+            #cardTitle {{
                 color: {self.colors['fg']};
-                border: 1px solid {self.colors['accent']};
-                padding: 5px;
-                border-radius: 4px;
-                opacity: 200;
+                font-size: 16px;
+                font-weight: bold;
+            }}
+            
+            #hoursLabel {{
+                color: {self.colors['accent']};
+                font-size: 16px;
+                font-weight: bold;
+            }}
+            
+            #studyBox {{
+                background-color: {self.colors['bg_light']};
+                border: 2px solid {self.colors['accent']};
+                border-radius: 6px;
+                padding: 8px;
+                margin: 2px;
+                min-width: 30px;
+                min-height: 30px;
+                max-width: 30px;
+                max-height: 30px;
+            }}
+            
+            #studyBox:checked {{
+                background-color: {self.colors['accent']};
+            }}
+            
+            #hourLabel {{
+                color: {self.colors['fg']};
+                font-size: 12px;
+                opacity: 0.8;
+                margin-top: 5px;
+            }}
+            
+            #helpText {{
+                color: {self.colors['fg']};
+                font-size: 14px;
+                line-height: 1.6;
+                opacity: 0.9;
             }}
         """ 
+
+class DynamicTheme(Theme):
+    """Tema dinâmico que pode mudar em tempo de execução."""
+    
+    def __init__(self):
+        super().__init__()
+        self.active_theme = 'default'
+        self.themes = {
+            'default': {
+                'bg_dark': '#1e2124',
+                'bg_darker': '#16181a',
+                'bg_light': '#282b30',
+                'bg_lighter': '#36393f',
+                'fg': '#ffffff',
+                'accent': '#4169E1',
+                'success': '#43b581',
+                'warning': '#faa61a',
+                'error': '#ed4245',
+                'secondary': '#7289da'
+            },
+            'purple': {
+                'bg_dark': '#292341',
+                'bg_darker': '#221C36',
+                'bg_light': '#362C51',
+                'bg_lighter': '#42356B',
+                'fg': '#ffffff',
+                'accent': '#9B59B6',
+                'success': '#2ECC71',
+                'warning': '#F39C12',
+                'error': '#E74C3C',
+                'secondary': '#5D6DBE'
+            },
+            'ocean': {
+                'bg_dark': '#1A2530',
+                'bg_darker': '#0F1924',
+                'bg_light': '#253545',
+                'bg_lighter': '#34495E',
+                'fg': '#ECF0F1',
+                'accent': '#3498DB',
+                'success': '#1ABC9C',
+                'warning': '#F1C40F',
+                'error': '#E74C3C',
+                'secondary': '#2980B9'
+            },
+            'light': {
+                'bg_dark': '#F5F5F5',
+                'bg_darker': '#E0E0E0',
+                'bg_light': '#FAFAFA',
+                'bg_lighter': '#FFFFFF',
+                'fg': '#333333',
+                'accent': '#3F51B5',
+                'success': '#4CAF50',
+                'warning': '#FF9800',
+                'error': '#F44336',
+                'secondary': '#2196F3'
+            }
+        }
+        
+    def set_theme(self, theme_name):
+        """Altera o tema ativo."""
+        if theme_name in self.themes:
+            self.active_theme = theme_name
+            self.colors = self.themes[theme_name]
+            return True
+        return False
+    
+    def get_current_theme(self):
+        """Retorna o nome do tema atual."""
+        return self.active_theme
+    
+    def get_available_themes(self):
+        """Retorna uma lista com os temas disponíveis."""
+        return list(self.themes.keys())
+    
+    def add_custom_theme(self, name, colors):
+        """Adiciona um tema personalizado."""
+        if all(key in colors for key in self.themes['default'].keys()):
+            self.themes[name] = colors
+            return True
+        return False 

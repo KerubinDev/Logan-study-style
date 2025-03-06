@@ -5,7 +5,7 @@ from src.config.settings import THEMES, POMODORO_DEFAULTS
 from src.services.pomodoro import PomodoroTimer
 from src.services.task_manager import TaskManager
 from src.services.report_generator import ReportGenerator
-from src.gui.visual_effects import SimpleEffects
+from src.gui.visual_effects import SimpleEffects, AnimatedTabWidget
 from plyer import notification
 from src.gui.settings import SettingsWindow
 from tkinter import filedialog
@@ -17,10 +17,15 @@ from PySide6.QtCore import QTimer
 from src.services.session_manager import SessionManager
 from src.gui.login import LoginWindow
 from src.services.auth_manager import AuthManager
+from src.gui.method_widget import MethodWidget
+from src.gui.dashboard import DashboardWidget
 
 class MainWindow(QMainWindow):
     def __init__(self, user_id):
         super().__init__()
+        # Configurar ícone da janela
+        icon = QIcon(os.path.join(os.path.dirname(__file__), '..', 'img', 'logo.png'))
+        self.setWindowIcon(icon)
         self.user_id = user_id
         self.theme = Theme()
         self.pomodoro_timer = PomodoroTimer(user_id)
@@ -36,8 +41,16 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(1200, 800)
         self.setStyleSheet(self.theme.get_main_style())
         
-        # Widget central
+        # Adicionar efeito de sombra à janela principal
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(20)
+        shadow.setColor(QColor(0, 0, 0, 80))
+        shadow.setOffset(0, 0)
+        self.setGraphicsEffect(shadow)
+        
+        # Widget central com fundo personalizado
         central_widget = QWidget()
+        central_widget.setObjectName("mainBackground")
         self.setCentralWidget(central_widget)
         
         # Layout principal
@@ -54,12 +67,60 @@ class MainWindow(QMainWindow):
         content_area.setObjectName("contentArea")
         content_layout = QVBoxLayout(content_area)
         content_layout.setContentsMargins(20, 20, 20, 20)
+        
+        # Adicionar animação de transição para tabs
+        self.tab_widget = AnimatedTabWidget()
+        self.tab_widget.setObjectName("mainTabs")
+        content_layout.addWidget(self.tab_widget)
+        
         main_layout.addWidget(content_area)
         
-        # Adicionar widgets de conteúdo
-        self.create_pomodoro_widget(content_layout)
-        self.create_tasks_widget(content_layout)
-        self.create_stats_widget(content_layout)
+        # Carregar as tabs
+        self.setup_tabs()
+        
+        # Configurar notificações
+        self.setup_notification_system()
+        
+        # Verificar e mostrar conquistas pendentes
+        QTimer.singleShot(1000, self.check_pending_achievements)
+        
+    def setup_tabs(self):
+        """Configura as abas do aplicativo."""
+        # Tab Dashboard
+        dashboard = DashboardWidget(self.user_id, self)
+        self.tab_widget.addTab(dashboard, "Dashboard")
+        
+        # Tab Método Logan
+        method_widget = MethodWidget(self.user_id)
+        self.tab_widget.addTab(method_widget, "Método Logan")
+        
+        # Tab Timer Avançado
+        from src.gui.timer_widget import AdvancedTimerWidget
+        timer_container = QWidget()
+        timer_layout = QVBoxLayout(timer_container)
+        timer_layout.setAlignment(Qt.AlignCenter)
+        
+        timer_widget = AdvancedTimerWidget(user_id=self.user_id, parent=self)
+        timer_widget.timerFinished.connect(self.on_timer_finished)
+        timer_layout.addWidget(timer_widget, alignment=Qt.AlignCenter)
+        
+        self.tab_widget.addTab(timer_container, "Pomodoro")
+        
+        # Tab Progresso de Aprendizagem
+        from src.gui.learning_progress import LearningProgressWidget
+        learning_widget = LearningProgressWidget(self.user_id)
+        self.tab_widget.addTab(learning_widget, "Progresso")
+        
+        # Tab Estatísticas
+        from src.gui.statistics import StatisticsPanel
+        stats_panel = StatisticsPanel(self.user_id)
+        self.tab_widget.addTab(stats_panel, "Estatísticas")
+        
+        # Tab Calendário
+        calendar_widget = QScrollArea()
+        calendar_widget.setWidgetResizable(True)
+        calendar_widget.setWidget(self.create_calendar_widget())
+        self.tab_widget.addTab(calendar_widget, "Calendário")
         
     def create_sidebar(self):
         """Cria a barra lateral com navegação."""
@@ -503,6 +564,50 @@ class MainWindow(QMainWindow):
         minutes = self.pomodoro_timer.time_remaining // 60
         seconds = self.pomodoro_timer.time_remaining % 60
         self.timer_label.setText(f"{minutes:02d}:{seconds:02d}")
+
+    def on_timer_finished(self, mode):
+        """Manipula o evento de término do timer."""
+        if mode == "work":
+            # Registrar sessão de estudo concluída
+            # Verificar conquistas
+            self.check_achievements()
+            
+            # Mostrar notificação
+            self.effects.show_notification(
+                self, 
+                "Pomodoro Concluído", 
+                "Parabéns! Você completou um ciclo de trabalho. É hora de uma pausa."
+            )
+        elif mode == "break":
+            # Mostrar notificação
+            self.effects.show_notification(
+                self, 
+                "Pausa Concluída", 
+                "É hora de voltar ao trabalho!"
+            )
+        else:  # long_break
+            # Mostrar notificação
+            self.effects.show_notification(
+                self, 
+                "Pausa Longa Concluída", 
+                "Você completou uma pausa longa. Pronto para recomeçar?"
+            )
+
+    def check_achievements(self):
+        """Verifica e exibe conquistas pendentes."""
+        from src.services.achievement_manager import AchievementManager
+        achievement_manager = AchievementManager(self.user_id)
+        
+        # Verificar conquistas baseadas nas atividades recentes
+        new_achievements = achievement_manager.check_new_achievements()
+        
+        # Exibir notificações para novas conquistas
+        for achievement in new_achievements:
+            self.effects.show_achievement(
+                self,
+                achievement['name'],
+                achievement['description']
+            )
 
 class AddTaskDialog(QDialog):
     def __init__(self, parent):

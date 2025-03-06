@@ -25,6 +25,7 @@ class User(Base):
     app_config = relationship("AppConfig", back_populates="user", uselist=False)
     achievements = relationship("UserAchievement", back_populates="user")
     level = relationship("UserLevel", back_populates="user", uselist=False)
+    study_sessions = relationship("StudySession", back_populates="user")
 
     @staticmethod
     def authenticate(username: str, password: str) -> 'User':
@@ -93,12 +94,10 @@ class PomodoroSession(Base):
     
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'))
-    start_time = Column(DateTime, nullable=False)
-    end_time = Column(DateTime)
-    duration = Column(Integer)  # em minutos
+    start_time = Column(DateTime, default=datetime.now)
+    end_time = Column(DateTime, nullable=True)
     completed = Column(Boolean, default=False)
     
-    # Relacionamento
     user = relationship("User", back_populates="pomodoro_sessions")
 
 class PomodoroConfig(Base):
@@ -161,4 +160,19 @@ class UserLevel(Base):
     current_xp = Column(Integer, default=0)
     total_xp = Column(Integer, default=0)
     
-    user = relationship("User", back_populates="level") 
+    user = relationship("User", back_populates="level")
+
+class StudySession(Base):
+    __tablename__ = 'study_sessions'
+    
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    subject = Column(String(100))
+    duration = Column(Integer)  # Duração em minutos
+    start_time = Column(DateTime, default=datetime.now)
+    end_time = Column(DateTime, nullable=True)
+    
+    user = relationship("User", back_populates="study_sessions")
+
+# Adicionar relação na classe User
+User.pomodoro_sessions = relationship("PomodoroSession", back_populates="user") 

@@ -9,6 +9,9 @@ from src.database.database import get_data_dir
 class LoginWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        # Configurar ícone da janela
+        icon = QIcon(os.path.join(os.path.dirname(__file__), '..', 'img', 'logo.png'))
+        self.setWindowIcon(icon)
         self.theme = Theme()
         self.auth_manager = AuthManager()
         self.setup_ui()

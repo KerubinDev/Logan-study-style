@@ -6,6 +6,7 @@ from src.database.database import init_db, get_data_dir
 from src.services.session_manager import SessionManager
 import os
 from datetime import datetime
+from src.database.migrate import migrate_database
 
 def main():
     try:
@@ -13,8 +14,9 @@ def main():
         data_dir = get_data_dir()
         os.makedirs(data_dir, exist_ok=True)
         
-        # Inicializar banco de dados
+        # Inicializar banco de dados e realizar migrações
         init_db()
+        migrate_database()
         
         # Iniciar aplicação
         app = QApplication(sys.argv)

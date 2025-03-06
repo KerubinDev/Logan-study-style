@@ -3,10 +3,14 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from src.database.models import User
 from src.gui.themes import Theme
+import os
 
 class RegisterWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        # Configurar ícone da janela
+        icon = QIcon(os.path.join(os.path.dirname(__file__), '..', 'img', 'logo.png'))
+        self.setWindowIcon(icon)
         self.theme = Theme()
         self.setup_ui()
         
