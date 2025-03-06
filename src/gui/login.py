@@ -6,9 +6,9 @@ from src.gui.themes import Theme
 import os
 from src.database.database import get_data_dir
 
-class LoginWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
+class LoginWindow(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
         # Configurar ícone da janela
         icon = QIcon(os.path.join(os.path.dirname(__file__), '..', 'img', 'logo.png'))
         self.setWindowIcon(icon)
@@ -23,11 +23,9 @@ class LoginWindow(QMainWindow):
         self.setStyleSheet(self.theme.get_main_style())
         
         # Widget central
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-        
-        # Layout principal
+        central_widget = QWidget(self)
         layout = QVBoxLayout(central_widget)
+        self.setLayout(layout)
         layout.setContentsMargins(40, 40, 40, 40)
         layout.setSpacing(30)
         
@@ -145,6 +143,17 @@ class LoginWindow(QMainWindow):
         self.register_window.show()
         self.close()
 
+def main():
+    import sys
+    from PySide6.QtWidgets import QApplication
+
+    app = QApplication(sys.argv)
+    
+    # Certifique-se de que não está passando um inteiro aqui
+    login_window = LoginWindow()  # Remova qualquer argumento que não seja permitido
+    login_window.show()
+    
+    sys.exit(app.exec())
+
 if __name__ == "__main__":
-    app = LoginWindow()
-    app.show() 
+    main() 

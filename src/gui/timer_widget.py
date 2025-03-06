@@ -206,6 +206,46 @@ class AdvancedTimerWidget(QWidget):
         settings_layout.addWidget(save_btn)
         
         main_layout.addWidget(settings_card)
+        
+        # Estilizando o cartão do timer
+        self.setStyleSheet("""
+            #timerCard {
+                background-color: #FFFFFF;
+                border-radius: 10px;
+                padding: 20px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+            #timerModeLabel {
+                font-size: 24px;
+                font-weight: bold;
+                color: #333333;
+            }
+            #etaLabel {
+                font-size: 16px;
+                color: #666666;
+            }
+            #timerButton {
+                background-color: #007BFF;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                padding: 10px;
+            }
+            #timerButton:hover {
+                background-color: #0056b3;
+            }
+            #settingsCard {
+                background-color: #F9F9F9;
+                border-radius: 10px;
+                padding: 20px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+            #settingsTitle {
+                font-size: 20px;
+                font-weight: bold;
+                color: #333333;
+            }
+        """)
     
     def toggle_timer(self):
         """Inicia ou pausa o timer."""

@@ -19,12 +19,13 @@ from src.gui.login import LoginWindow
 from src.services.auth_manager import AuthManager
 from src.gui.method_widget import MethodWidget
 from src.gui.dashboard import DashboardWidget
+from qt_material import apply_stylesheet
 
 class MainWindow(QMainWindow):
     def __init__(self, user_id):
         super().__init__()
         # Configurar ícone da janela
-        icon = QIcon(os.path.join(os.path.dirname(__file__), '..', 'img', 'logo.png'))
+        icon = QIcon(os.path.join(os.path.dirname(__file__), '..', 'img', 'app.ico'))
         self.setWindowIcon(icon)
         self.user_id = user_id
         self.theme = Theme()
@@ -83,6 +84,31 @@ class MainWindow(QMainWindow):
         
         # Verificar e mostrar conquistas pendentes
         QTimer.singleShot(1000, self.check_pending_achievements)
+        
+        # Aplicando um tema moderno
+        apply_stylesheet(self, theme='dark_blue')
+        
+        # Melhorias na sidebar
+        self.sidebar.setStyleSheet("""
+            background-color: #2E2E2E;
+            color: white;
+        """)
+        
+        # Adicionando efeitos de hover nos botões da sidebar
+        sidebar_layout = self.sidebar.layout()
+        for btn in sidebar_layout.children():
+            if isinstance(btn, QPushButton):
+                btn.setStyleSheet("""
+                    QPushButton {
+                        background-color: #3E3E3E;
+                        color: white;
+                        border: none;
+                        padding: 10px;
+                    }
+                    QPushButton:hover {
+                        background-color: #4E4E4E;
+                    }
+                """)
         
     def setup_tabs(self):
         """Configura as abas do aplicativo."""

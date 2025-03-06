@@ -53,6 +53,49 @@ class LearningProgressWidget(QWidget):
         
         # Carregar tópicos
         self.load_topic_widgets()
+        
+        # Estilizando os cartões de tópicos
+        self.setStyleSheet("""
+            #topicCard {
+                background-color: #FFFFFF;
+                border-radius: 10px;
+                padding: 15px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+            #pageTitle {
+                font-size: 24px;
+                font-weight: bold;
+                color: #333333;
+            }
+            #cardTitle {
+                font-size: 20px;
+                font-weight: bold;
+                color: #007BFF;
+            }
+            #cardDescription {
+                font-size: 14px;
+                color: #666666;
+            }
+            #smallButton {
+                background-color: #007BFF;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                padding: 5px;
+            }
+            #smallButton:hover {
+                background-color: #0056b3;
+            }
+            #linkButton {
+                background-color: transparent;
+                color: #007BFF;
+                border: none;
+                text-decoration: underline;
+            }
+            #linkButton:hover {
+                color: #0056b3;
+            }
+        """)
     
     def load_topics(self):
         """Carrega os tópicos de aprendizagem do usuário."""

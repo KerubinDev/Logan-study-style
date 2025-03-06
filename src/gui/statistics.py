@@ -153,6 +153,46 @@ class StatisticsPanel(QWidget):
         # Configurar scroll area
         scroll_area.setWidget(scroll_content)
         main_layout.addWidget(scroll_area)
+        
+        # Estilizando os cartões de estatísticas
+        self.setStyleSheet("""
+            #sectionCard {
+                background-color: #FFFFFF;
+                border-radius: 10px;
+                padding: 15px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+            #pageTitle {
+                font-size: 24px;
+                font-weight: bold;
+                color: #333333;
+            }
+            #statCard {
+                background-color: #F0F0F0;
+                border-radius: 10px;
+                padding: 10px;
+                margin: 5px;
+            }
+            #statValue {
+                font-size: 20px;
+                font-weight: bold;
+                color: #007BFF;
+            }
+            #statTitle {
+                font-size: 16px;
+                color: #666666;
+            }
+            #primaryButton {
+                background-color: #007BFF;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                padding: 10px;
+            }
+            #primaryButton:hover {
+                background-color: #0056b3;
+            }
+        """)
     
     def create_stat_card(self, parent_layout, title, value, icon_name):
         """Cria um card de estatística resumida."""

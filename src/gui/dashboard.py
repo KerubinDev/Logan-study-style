@@ -174,6 +174,45 @@ class DashboardWidget(QWidget):
         content_layout.addWidget(right_column, 30)
         
         main_layout.addWidget(content)
+        
+        # Estilizando o cabeçalho
+        self.setStyleSheet("""
+            #dashboardHeader {
+                background-color: #3E3E3E;
+                border-radius: 10px;
+                padding: 10px;
+            }
+            #greetingLabel {
+                font-size: 24px;
+                font-weight: bold;
+                color: white;
+            }
+            #dateLabel {
+                font-size: 16px;
+                color: #B0B0B0;
+            }
+            #sectionCard {
+                background-color: #FFFFFF;
+                border-radius: 10px;
+                padding: 15px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+            #sectionTitle {
+                font-size: 20px;
+                font-weight: bold;
+                color: #333333;
+            }
+            #primaryButton, #actionButton {
+                background-color: #007BFF;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                padding: 10px;
+            }
+            #primaryButton:hover, #actionButton:hover {
+                background-color: #0056b3;
+            }
+        """)
     
     def clear_layout(self, layout):
         """Remove todos os widgets de um layout."""
